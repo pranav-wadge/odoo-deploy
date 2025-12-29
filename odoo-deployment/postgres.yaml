@@ -10,7 +10,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /data/postgres
+    path: /home/pranav/k3s-postgres
 ---
 # ---------- Persistent Volume Claim ----------
 apiVersion: v1
@@ -42,7 +42,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: postgres:14
+        image: postgres:16
         env:
         - name: POSTGRES_DB
           value: odoo
@@ -50,6 +50,8 @@ spec:
           value: odoo
         - name: POSTGRES_PASSWORD
           value: odoo
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         ports:
         - containerPort: 5432
         volumeMounts:
