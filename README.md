@@ -58,20 +58,20 @@ kubectl apply -f postgres.yaml
 
 
 Wait until PostgreSQL is running:
-
+``` docker
 kubectl get pods
-
+```
 
 Expected output:
-
+```
 postgres-xxxxx   1/1   Running
-
+```
 
 Check storage and service:
-
+```
 kubectl get pvc
 kubectl get svc postgres
-
+```
 ⚠️ Step 2: Initialize Odoo Database (RUN ONCE)
 
 ❗ IMPORTANT
@@ -89,9 +89,11 @@ Odoo requires its core tables (base module)
 This command initializes them
 
 Stop Odoo (if running)
+```
 kubectl scale deploy odoo --replicas=0
-
+```
 Initialize the database
+```
 kubectl run odoo-init \
   --rm -it \
   --image=odoo:17 \
@@ -105,7 +107,7 @@ kubectl run odoo-init \
     --db_user=odoo \
     --db_password=odoo \
     --stop-after-init
-
+```
 ✅ Expected Result
 
 Logs show base module loaded
@@ -115,39 +117,40 @@ Pod exits automatically
 Database is now ready
 
 🚀 Step 3: Deploy Odoo
+```
 kubectl apply -f odoo.yaml
-
+```
 
 Check pod status:
-
+```
 kubectl get pods
-
+```
 
 Expected:
-
+```
 odoo-xxxxx   1/1   Running
-
+```
 🌐 Step 4: Access Odoo
 
 Get Node IP:
-
+```
 kubectl get nodes -o wide
-
+```
 
 Get NodePort:
-
+```
 kubectl get svc odoo
-
+```
 
 Example output:
-
+```
 odoo   NodePort   10.x.x.x   8069:30158/TCP
-
+```
 
 Open in browser:
-
+```
 http://<NODE-IP>:<NODEPORT>
-
+```
 
 Example:
 
@@ -164,32 +167,36 @@ Use the admin email and password you created in the Odoo UI.
 If you forget the admin password, you can reset it safely.
 
 Connect to PostgreSQL inside the cluster
+```
 kubectl exec -it deploy/postgres -- psql -U odoo odoo
-
+```
 Run this SQL command
+```
 UPDATE res_users SET password='admin' WHERE login='admin';
-
+```
 Exit psql
+```
 \q
-
+```
 
 Now log in with:
-
+```
 Email: admin
 Password: admin
-
+```
 
 ⚠️ Change the password immediately after login.
 
 🛑 How to Stop Services (Safe)
 
 Stops pods without deleting data:
-
+```
 kubectl scale deploy odoo postgres --replicas=0
-
+```
 🔁 How to Start Again
+```
 kubectl scale deploy postgres odoo --replicas=1
-
+```
 
 👉 No database initialization needed again.
 
