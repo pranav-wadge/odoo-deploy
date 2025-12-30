@@ -18,15 +18,50 @@ spec:
         image: odoo:17
         ports:
         - containerPort: 8069
+
         env:
-        - name: HOST
+        # ---- Database config ----
+        # ---- Database config (CORRECT for Odoo) ----
+        - name: DB_HOST
           value: postgres
-        - name: PORT
+        - name: DB_PORT
           value: "5432"
-        - name: USER
+        - name: DB_USER
           value: odoo
-        - name: PASSWORD
+        - name: DB_PASSWORD
           value: odoo
+
+        # ---- OpenTelemetry config ----
+        - name: OTEL_SERVICE_NAME
+          value: odoo
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: http://tempo.observability.svc.cluster.local:4318
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: http/protobuf
+        - name: OTEL_TRACES_EXPORTER
+          value: otlp
+        - name: OTEL_METRICS_EXPORTER
+          value: none
+
+        command:
+          - /bin/bash
+          - -c
+          - |
+            export PATH="$PATH:/var/lib/odoo/.local/bin" && \
+            pip install --no-cache-dir \
+              opentelemetry-distro \
+              opentelemetry-exporter-otlp \
+              opentelemetry-instrumentation-wsgi \
+              opentelemetry-instrumentation-requests \
+            && exec opentelemetry-instrument \
+              odoo \
+              --db_host=postgres \
+              --db_port=5432 \
+              --db_user=odoo \
+              --db_password=odoo \
+              --http-port=8069 \
+              --proxy-mode
+
 ---
 # ---------- Odoo Service ----------
 apiVersion: v1
